@@ -44,7 +44,7 @@
     <string name="pref_storage_summary_days">Remember clipboards for %d days.</string>
     <string name="title_activity_editor">New Clip</string>
     <string name="first_launch_clipboards_0">Welcome to Clip Stack. %1$s</string>
-    <string name="first_launch_clipboards_1">It can show clipboard history in notification.</string>
+    <string name="first_launch_clipboards_1">It can show clipboard history in notification. %1$s</string>
     <string name="first_launch_clipboards_2">Click here %1$s to edit.</string>
     <string name="first_launch_clipboards_3">%1$s Swipe to delete. %2$s</string>
     <string name="title_activity_activity_get_share_text">Copy to clipboard</string>

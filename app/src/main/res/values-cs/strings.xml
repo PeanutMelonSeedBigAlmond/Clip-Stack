@@ -44,7 +44,7 @@
     <string name="pref_storage_summary_days">Pamatovat si schránku %d dny(ů).</string>
     <string name="title_activity_editor">Nový klip</string>
     <string name="first_launch_clipboards_0">Vítejte v aplikaci Clip Stack. %1$s</string>
-    <string name="first_launch_clipboards_1">Umí zobrazit historii schránky v upozorněních.</string>
+    <string name="first_launch_clipboards_1">Umí zobrazit historii schránky v upozorněních. %1$s</string>
     <string name="first_launch_clipboards_2">Klikněte sem %1$s pro úpravu.</string>
     <string name="first_launch_clipboards_3">%1$s tažením smazat. %2$s</string>
     <string name="title_activity_activity_get_share_text">Zkopírovat do schránky</string>

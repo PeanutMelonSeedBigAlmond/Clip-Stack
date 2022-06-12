@@ -1,11 +1,11 @@
 package com.catchingnow.tinyclipboardmanager;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -14,18 +14,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.MenuItemCompat;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -36,6 +31,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,13 +47,12 @@ public class ActivityMain extends MyActionBarActivity {
     public final static String EXTRA_IS_FROM_NOTIFICATION = "com.catchingnow.tinyclipboard.EXTRA.isFromNotification";
     public final static String FIRST_LAUNCH = "pref_is_first_launch";
     public final static String SECOND_LAUNCH = "pref_is_second_launch";
-    private static int TRANSLATION_FAST = 400;
-    private static int TRANSLATION_SLOW = 1000;
+    private static final int TRANSLATION_FAST = 400;
+    private static final int TRANSLATION_SLOW = 1000;
 
     private RecyclerView mRecList;
     private LinearLayout mRecLayout;
     private ClipCardAdapter clipCardAdapter;
-    private LinearLayoutManager linearLayoutManager;
     protected Toolbar mToolbar;
     private ImageButton mFAB;
     private SearchView searchView;
@@ -63,7 +64,7 @@ public class ActivityMain extends MyActionBarActivity {
     protected Context context;
     private Storage db;
     private List<ClipObject> clips;
-    private ArrayList<ClipObject> deleteQueue = new ArrayList<>();
+    private final ArrayList<ClipObject> deleteQueue = new ArrayList<>();
     private BroadcastReceiver mMessageReceiver;
 
     //FAB
@@ -86,9 +87,9 @@ public class ActivityMain extends MyActionBarActivity {
         db = Storage.getInstance(context);
         queryText = "";
 
-        mFAB = (ImageButton) findViewById(R.id.main_fab);
-        mRecLayout = (LinearLayout) findViewById(R.id.recycler_layout);
-        mToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        mFAB = findViewById(R.id.main_fab);
+        mRecLayout = findViewById(R.id.recycler_layout);
+        mToolbar = findViewById(R.id.my_toolbar);
         if (getString(R.string.screen_type).contains("phone")) {
             mToolbar.setNavigationIcon(R.drawable.icon_shadow);
         } else {
@@ -98,7 +99,7 @@ public class ActivityMain extends MyActionBarActivity {
 
         //tablet layout
         if (getString(R.string.screen_type).contains("tablet")) {
-            RelativeLayout tabletMain = (RelativeLayout) findViewById(R.id.tablet_main);
+            RelativeLayout tabletMain = findViewById(R.id.tablet_main);
             if (tabletMain != null) {
                 ViewGroup.LayoutParams tabletMainLayoutParams = tabletMain.getLayoutParams();
                 tabletMainLayoutParams.width =
@@ -142,23 +143,17 @@ public class ActivityMain extends MyActionBarActivity {
         if (getString(R.string.screen_type).contains("phone")) {
             //phone
             mFAB.setTranslationX(0);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mFAB.animate().translationX(MyUtil.dip2px(context, 90));
-                    mFabRotation(false, 600);
-                }
+            new Handler().postDelayed(() -> {
+                mFAB.animate().translationX(MyUtil.dip2px(context, 90));
+                mFabRotation(false, 600);
             }, 600);
         } else {
             //tablet
             mFAB.setScaleX(1);
             mFAB.setScaleY(1);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mFAB.animate().scaleX(0).scaleY(0);
-                    mFabRotation(false, 600);
-                }
+            new Handler().postDelayed(() -> {
+                mFAB.animate().scaleX(0).scaleY(0);
+                mFabRotation(false, 600);
             }, 600);
         }
 
@@ -203,23 +198,17 @@ public class ActivityMain extends MyActionBarActivity {
         if (getString(R.string.screen_type).contains("phone")) {
             //phone
             mFAB.setTranslationX(MyUtil.dip2px(context, 90));
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mFAB.animate().translationX(0);
-                    mFabRotation(false, 600);
-                }
+            new Handler().postDelayed(() -> {
+                mFAB.animate().translationX(0);
+                mFabRotation(false, 600);
             }, 600);
         } else {
             //tablet
             mFAB.setScaleX(0);
             mFAB.setScaleY(0);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mFAB.animate().scaleX(1).scaleY(1);
-                    mFabRotation(false, 600);
-                }
+            new Handler().postDelayed(() -> {
+                mFAB.animate().scaleX(1).scaleY(1);
+                mFabRotation(false, 600);
             }, 600);
         }
     }
@@ -246,7 +235,7 @@ public class ActivityMain extends MyActionBarActivity {
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         searchView = (SearchView) searchItem.getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
+        searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
                 if (getString(R.string.screen_type).contains("tablet")) {
@@ -278,16 +267,13 @@ public class ActivityMain extends MyActionBarActivity {
                 return true;
             }
         });
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                searchItem.collapseActionView();
-                queryText = null;
-                initView();
-                lastStorageUpdate = null;
-                setView();
-                return false;
-            }
+        searchView.setOnCloseListener(() -> {
+            searchItem.collapseActionView();
+            queryText = null;
+            initView();
+            lastStorageUpdate = null;
+            setView();
+            return false;
         });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -310,6 +296,7 @@ public class ActivityMain extends MyActionBarActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -343,7 +330,7 @@ public class ActivityMain extends MyActionBarActivity {
 
     @Override
     public boolean onSearchRequested() {
-        MenuItemCompat.expandActionView(searchItem);
+        searchItem.expandActionView();
         searchView.requestFocus();
         return true;
     }
@@ -354,36 +341,33 @@ public class ActivityMain extends MyActionBarActivity {
         if (isXHidden != -1) return;
         isXHidden = 0;
         mFabRotation(true, TRANSLATION_FAST);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (getString(R.string.screen_type).contains("phone")) {
-                    mFAB.animate().translationX(MyUtil.dip2px(context, 90));
-                } else {
-                    mFAB.animate().scaleX(0).scaleY(0);
-                }
-                mFAB.animate().setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        isXHidden = 1;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        isXHidden = 1;
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
+        new Handler().postDelayed(() -> {
+            if (getString(R.string.screen_type).contains("phone")) {
+                mFAB.animate().translationX(MyUtil.dip2px(context, 90));
+            } else {
+                mFAB.animate().scaleX(0).scaleY(0);
             }
+            mFAB.animate().setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    isXHidden = 1;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    isXHidden = 1;
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
         }, 200);
     }
 
@@ -395,100 +379,89 @@ public class ActivityMain extends MyActionBarActivity {
         if (isYHidden == 1) {
             mFAB.setTranslationY(0);
         }
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (getString(R.string.screen_type).contains("phone")) {
-                    mFAB.animate().translationX(0);
-                } else {
-                    mFAB.animate().scaleX(1).scaleY(1);
-                }
-                mFAB.animate().setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        isXHidden = -1;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        isXHidden = -1;
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                mFabRotation(false, TRANSLATION_SLOW);
+        new Handler().postDelayed(() -> {
+            if (getString(R.string.screen_type).contains("phone")) {
+                mFAB.animate().translationX(0);
+            } else {
+                mFAB.animate().scaleX(1).scaleY(1);
             }
+            mFAB.animate().setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    isXHidden = -1;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    isXHidden = -1;
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            mFabRotation(false, TRANSLATION_SLOW);
         }, 200);
     }
 
     private void easterEgg() {
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tooYoungTooSimple += 1;
-                switch (tooYoungTooSimple) {
-                    case 3:
-                        db.modifyClip(
-                                null,
-                                "　 ∧_∧\n" +
-                                        "　(  ❜ω❜ )\n" +
-                                        "　｜つ／(＿＿＿\n" +
-                                        "／└-(＿＿＿_／\n" +
-                                        "￣￣￣￣￣￣\n" +
-                                        "Are you clicking me ?"
-                        );
-                        break;
-                    case 4:
-                        db.modifyClip(
-                                null,
-                                "　＜⌒／ヽ-_＿\n" +
-                                        "／＜_/＿＿＿_／\n" +
-                                        "￣￣￣￣￣￣\n" +
-                                        "I want to sleep..."
-                        );
-                        break;
-                    case 5:
-                        db.modifyClip(
-                                null,
-                                "╮(╯_╰)╭\n" +
-                                        "Well..."
-                        );
-                        break;
-                    case 6:
-                        Intent browserIntent = new Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse("https://play.google.com/store/apps/details?id=com.catchingnow.tinyclipboardmanager")
-                        );
-                        startActivity(browserIntent);
-                        Toast.makeText(
-                                context,
-                                getString(R.string.pref_rate_title) +
-                                        " ★★★★★\n" +
-                                        "ヽ(́◕◞౪◟◕‵)ﾉ\n" +
-                                        getString(R.string.pref_rate_summary),
-                                Toast.LENGTH_LONG
-                        ).show();
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                db.modifyClip(
-                                        null,
-                                        "(́^ _ ^)~♥\n" +
-                                                "Thank you!"
-                                );
-                            }
-                        }, 500);
-                        tooYoungTooSimple = 0;
-                        break;
-                }
+        mToolbar.setNavigationOnClickListener(v -> {
+            tooYoungTooSimple += 1;
+            switch (tooYoungTooSimple) {
+                case 3:
+                    db.modifyClip(
+                            null,
+                            "　 ∧_∧\n" +
+                                    "　(  ❜ω❜ )\n" +
+                                    "　｜つ／(＿＿＿\n" +
+                                    "／└-(＿＿＿_／\n" +
+                                    "￣￣￣￣￣￣\n" +
+                                    "Are you clicking me ?"
+                    );
+                    break;
+                case 4:
+                    db.modifyClip(
+                            null,
+                            "　＜⌒／ヽ-_＿\n" +
+                                    "／＜_/＿＿＿_／\n" +
+                                    "￣￣￣￣￣￣\n" +
+                                    "I want to sleep..."
+                    );
+                    break;
+                case 5:
+                    db.modifyClip(
+                            null,
+                            "╮(╯_╰)╭\n" +
+                                    "Well..."
+                    );
+                    break;
+                case 6:
+                    Intent browserIntent = new Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=com.catchingnow.tinyclipboardmanager")
+                    );
+                    startActivity(browserIntent);
+                    Toast.makeText(
+                            context,
+                            getString(R.string.pref_rate_title) +
+                                    " ★★★★★\n" +
+                                    "ヽ(́◕◞౪◟◕‵)ﾉ\n" +
+                                    getString(R.string.pref_rate_summary),
+                            Toast.LENGTH_LONG
+                    ).show();
+                    new Handler().postDelayed(() -> db.modifyClip(
+                            null,
+                            "(́^ _ ^)~♥\n" +
+                                    "Thank you!"
+                    ), 500);
+                    tooYoungTooSimple = 0;
+                    break;
             }
         });
     }
@@ -505,16 +478,11 @@ public class ActivityMain extends MyActionBarActivity {
         } else {
             mFabBackground.reverseTransition((int) mFAB.animate().getDuration());
         }
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mFAB.setImageResource(isStarred ?
-                                R.drawable.ic_action_star_white
-                                :
-                                R.drawable.ic_action_add
-                );
-            }
-        }, TRANSLATION_SLOW / 3 * 2);
+        new Handler().postDelayed(() -> mFAB.setImageResource(isStarred ?
+                        R.drawable.ic_action_star_white
+                        :
+                        R.drawable.ic_action_add
+        ), TRANSLATION_SLOW / 3 * 2);
     }
 
     private void mFabRotation(boolean clockwise, long time) {
@@ -525,12 +493,7 @@ public class ActivityMain extends MyActionBarActivity {
         mFAB.animate()
                 .rotation(rotateDegree)
                 .setDuration(time);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                isRotating = false;
-            }
-        }, time - 400);
+        new Handler().postDelayed(() -> isRotating = false, time - 400);
     }
 
     public void mFabOnClick(View view) {
@@ -551,8 +514,9 @@ public class ActivityMain extends MyActionBarActivity {
         for (ClipObject clipObject : deleteQueue) {
             db.modifyClip(clipObject.getText(), null);
             clipCardAdapter.remove(clipObject);
+            clipCardAdapter.notifyItemRemoved(0);
         }
-        clipCardAdapter.notifyDataSetChanged();
+//        clipCardAdapter.notifyDataSetChanged();
         deleteQueue.clear();
     }
 
@@ -587,15 +551,14 @@ public class ActivityMain extends MyActionBarActivity {
         mRecLayout.removeAllViewsInLayout();
         LayoutInflater layoutInflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         layoutInflater.inflate(R.layout.view_main_recycler, mRecLayout, true);
-        mRecList = (RecyclerView) findViewById(R.id.cardList);
+        mRecList = findViewById(R.id.cardList);
         mRecList.setHasFixedSize(true);
-        linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecList.setLayoutManager(linearLayoutManager);
 
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener =
                 new SwipeableRecyclerViewTouchListener(
-                        context,
                         mRecList,
                         R.id.main_view,
                         R.id.main_background_view,
@@ -619,7 +582,7 @@ public class ActivityMain extends MyActionBarActivity {
             // hide FAB when list scroll on phone
             RecyclerView.OnScrollListener scrollFabAnimateListener = new RecyclerView.OnScrollListener() {
                 @Override
-                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);
                     if (dy > 20 && isYHidden == -1) {
                         //hide FAB on Y
@@ -685,27 +648,24 @@ public class ActivityMain extends MyActionBarActivity {
                 }
 
                 @Override
-                public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        switch (newState) {
-                            case RecyclerView.SCROLL_STATE_IDLE:
-                                if (getString(R.string.screen_type).contains("phone")) {
-                                    mToolbar.animate().translationZ(0);
-                                }
-                                mFAB.animate().translationZ(0);
-                                break;
-                            default:
-                                if (getString(R.string.screen_type).contains("phone")) {
-                                    mToolbar.animate().translationZ(MyUtil.dip2px(context, 4));
-                                }
-                                mFAB.animate().translationZ(MyUtil.dip2px(context, 4));
-                                break;
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            if (getString(R.string.screen_type).contains("phone")) {
+                                mToolbar.animate().translationZ(0);
+                            }
+                            mFAB.animate().translationZ(0);
+                        } else {
+                            if (getString(R.string.screen_type).contains("phone")) {
+                                mToolbar.animate().translationZ(MyUtil.dip2px(context, 4));
+                            }
+                            mFAB.animate().translationZ(MyUtil.dip2px(context, 4));
                         }
                     }
                 }
 
             };
-            mRecList.setOnScrollListener(scrollFabAnimateListener);
+            mRecList.addOnScrollListener(scrollFabAnimateListener);
         }
     }
 
@@ -770,12 +730,7 @@ public class ActivityMain extends MyActionBarActivity {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.action_delete_all)
                 .setMessage(getString(R.string.dialog_delete_all))
-                .setPositiveButton(getString(R.string.dialog_ok), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                db.deleteAllClipHistory();
-                            }
-                        }
+                .setPositiveButton(getString(R.string.dialog_ok), (dialog, which) -> db.deleteAllClipHistory()
                 )
                 .setNegativeButton(getString(R.string.dialog_cancel), null)
                 .create()
@@ -783,33 +738,27 @@ public class ActivityMain extends MyActionBarActivity {
     }
 
     protected void addClickStringAction(final Context context, final ClipObject clipObject, final int actionCode, View button) {
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
-                        .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
-                        .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
-                        .putExtra(ClipObjectActionBridge.ACTION_CODE, actionCode);
-                context.startService(openIntent);
-            }
+        button.setOnClickListener(v -> {
+            Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
+                    .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
+                    .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
+                    .putExtra(ClipObjectActionBridge.ACTION_CODE, actionCode);
+            context.startService(openIntent);
         });
     }
 
     protected void addLongClickStringAction(final Context context, final ClipObject clipObject, final int actionCode, View button) {
-        button.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                v.playSoundEffect(0);
-                Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
-                        .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
-                        .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
-                        .putExtra(ClipObjectActionBridge.ACTION_CODE, actionCode);
-                context.startService(openIntent);
+        button.setOnLongClickListener(v -> {
+            v.playSoundEffect(SoundEffectConstants.CLICK);
+            Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
+                    .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
+                    .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
+                    .putExtra(ClipObjectActionBridge.ACTION_CODE, actionCode);
+            context.startService(openIntent);
 //                if (isFromNotification) {
 //                    moveTaskToBack(true);
 //                }
-                return true;
-            }
+            return true;
         });
     }
 
@@ -818,8 +767,8 @@ public class ActivityMain extends MyActionBarActivity {
     }
 
     public class ClipCardAdapter extends RecyclerView.Adapter<ClipCardAdapter.ClipCardViewHolder> {
-        private Context context;
-        private List<ClipObject> clipObjectList;
+        private final Context context;
+        private final List<ClipObject> clipObjectList;
         private boolean allowAnimate = true;
 
         public ClipCardAdapter(List<ClipObject> clipObjectList, Context context) {
@@ -827,12 +776,7 @@ public class ActivityMain extends MyActionBarActivity {
             this.clipObjectList = clipObjectList;
             DisplayMetrics displaymetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    allowAnimate = false;
-                }
-            }, 100);
+            new Handler().postDelayed(() -> allowAnimate = false, 100);
         }
 
         @Override
@@ -866,19 +810,16 @@ public class ActivityMain extends MyActionBarActivity {
 
             setActionIcon(clipCardViewHolder.vShare);
 
-            clipCardViewHolder.vStarred.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    db.changeClipStarStatus(clipObject);
-                    //clipObject.setStarred(!clipObject.isStarred());
-                    if (clipObject.isStarred()) {
-                        clipCardViewHolder.vStarred.setImageResource(R.drawable.ic_action_star_yellow);
-                    } else {
-                        clipCardViewHolder.vStarred.setImageResource(R.drawable.ic_action_star_outline_grey600);
-                        if (isStarred) {
-                            //remove form starred list.
-                            remove(clipObject);
-                        }
+            clipCardViewHolder.vStarred.setOnClickListener(v -> {
+                db.changeClipStarStatus(clipObject);
+                //clipObject.setStarred(!clipObject.isStarred());
+                if (clipObject.isStarred()) {
+                    clipCardViewHolder.vStarred.setImageResource(R.drawable.ic_action_star_yellow);
+                } else {
+                    clipCardViewHolder.vStarred.setImageResource(R.drawable.ic_action_star_outline_grey600);
+                    if (isStarred) {
+                        //remove form starred list.
+                        remove(clipObject);
                     }
                 }
             });
@@ -887,6 +828,7 @@ public class ActivityMain extends MyActionBarActivity {
 
         }
 
+        @NonNull
         @Override
         public ClipCardViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
             View itemView = LayoutInflater.
@@ -950,7 +892,7 @@ public class ActivityMain extends MyActionBarActivity {
                 public void run() {
                     viewToAnimate.startAnimation(animation);
                 }
-            }, (position + 2) * 60);
+            }, (position + 2) * 60L);
         }
 
         public class ClipCardViewHolder extends RecyclerView.ViewHolder {
@@ -964,12 +906,12 @@ public class ActivityMain extends MyActionBarActivity {
 
             public ClipCardViewHolder(View v) {
                 super(v);
-                vTime = (TextView) v.findViewById(R.id.activity_main_card_time);
-                vDate = (TextView) v.findViewById(R.id.activity_main_card_date);
-                vText = (TextView) v.findViewById(R.id.activity_main_card_text);
-                vStarred = (ImageButton) v.findViewById(R.id.activity_main_card_star_button);
-                vShare = (ImageButton) v.findViewById(R.id.activity_main_card_share_button);
-                vBackground = (LinearLayout) v.findViewById(R.id.main_background_view);
+                vTime = v.findViewById(R.id.activity_main_card_time);
+                vDate = v.findViewById(R.id.activity_main_card_date);
+                vText = v.findViewById(R.id.activity_main_card_text);
+                vStarred = v.findViewById(R.id.activity_main_card_star_button);
+                vShare = v.findViewById(R.id.activity_main_card_share_button);
+                vBackground = v.findViewById(R.id.main_background_view);
                 vMain = v;
             }
         }

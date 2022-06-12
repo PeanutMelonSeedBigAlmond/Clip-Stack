@@ -6,7 +6,7 @@
     <string name="clip_notification_copy_button">Копирај </string>
     <string name="clip_notification_share_button">Подели </string>
     <string name="clip_notification_big_title">Недавне ставке</string>
-    <string name="toast_copied">копирано</string>
+    <string name="toast_copied">%1$s копирано</string>
     <string name="clip_notification_text">Проширите за још приказа.</string>
     <string name="clip_notification_single_text">Кликните да додате текст.</string>
     <string name="share_clipboard_to">Делите текст преко…</string>
@@ -44,7 +44,7 @@
     <string name="pref_storage_summary_days">Сачувај ставке %d дан(а).</string>
     <string name="title_activity_editor">Нова ставка</string>
     <string name="first_launch_clipboards_0">Добро дошли на Клип стек. %1$s</string>
-    <string name="first_launch_clipboards_1">Може да прикаже историјат клипборда у обавештењу.</string>
+    <string name="first_launch_clipboards_1">Може да прикаже историјат клипборда у обавештењу. %1$s</string>
     <string name="first_launch_clipboards_2">кликните овде %1$s да уредите.</string>
     <string name="first_launch_clipboards_3">%1$s Померите да обришете. %2$s</string>
     <string name="title_activity_activity_get_share_text">Копирај на клипборд</string>

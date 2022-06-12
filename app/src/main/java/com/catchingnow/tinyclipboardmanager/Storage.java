@@ -1,5 +1,7 @@
 package com.catchingnow.tinyclipboardmanager;
 
+import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,8 +12,9 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,11 +31,13 @@ public class Storage {
     private static final String CLIP_STRING = "history";
     private static final String CLIP_DATE = "date";
     private static final String CLIP_IS_STAR = "star";
+    @SuppressLint("StaticFieldLeak")
     private static Storage mInstance = null;
-    private StorageHelper dbHelper;
+
+    private final StorageHelper dbHelper;
     private SQLiteDatabase db;
-    private Context context;
-    private ClipboardManager clipboardManager;
+    private final Context context;
+    private final ClipboardManager clipboardManager;
     private List<ClipObject> clipsInMemory;
     private Date latsUpdate = new Date();
     private boolean isClipsInMemoryChanged = true;
@@ -101,7 +106,7 @@ public class Storage {
     public List<ClipObject> getClipHistory(int size) {
         List<ClipObject> allClips = getClipHistory();
         List<ClipObject> queryClips = new ArrayList<>();
-        size = (size > allClips.size() ? allClips.size() : size);
+        size = (Math.min(size, allClips.size()));
         for (int i = 0; i < size; i++) {
             queryClips.add(allClips.get(i));
         }
@@ -208,7 +213,7 @@ public class Storage {
         SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(context);
         float days = (float) Integer.parseInt(preference.getString(ActivitySetting.PREF_SAVE_DATES, "9999"));
         Log.v(MyUtil.PACKAGE_NAME,
-                "Start clean up SQLite at " + new Date().toString() + ", clean clips before " + days + " days");
+                "Start clean up SQLite at " + new Date() + ", clean clips before " + days + " days");
         boolean boolReturn = deleteClipHistoryBefore(days);
         MyUtil.requestBackup(context);
         return boolReturn;
@@ -362,7 +367,7 @@ public class Storage {
 
         String clipString;
         if (!clipboardManager.hasPrimaryClip()) {
-            clipboardManager.setText(topClipInStack);
+            clipboardManager.setPrimaryClip(ClipData.newPlainText("text",topClipInStack));
             return true;
         }
         try {
@@ -370,12 +375,12 @@ public class Storage {
             CharSequence charSequence = clipboardManager.getPrimaryClip().getItemAt(0).getText();
             clipString = String.valueOf(charSequence);
         } catch (Error ignored) {
-            clipboardManager.setText(topClipInStack);
+            clipboardManager.setPrimaryClip(ClipData.newPlainText("text",topClipInStack));
             return true;
         }
 
         if (!topClipInStack.equals(clipString)) {
-            clipboardManager.setText(topClipInStack);
+            clipboardManager.setPrimaryClip(ClipData.newPlainText("text",topClipInStack));
             return true;
         }
         return false;
@@ -419,7 +424,7 @@ public class Storage {
         return latsUpdate;
     }
 
-    public class StorageHelper extends SQLiteOpenHelper {
+    public static class StorageHelper extends SQLiteOpenHelper {
         public static final String DATABASE_NAME = "clippingnow.db";
         private static final int DATABASE_VERSION = 3;
         private static final String TABLE_NAME = "cliphistory";

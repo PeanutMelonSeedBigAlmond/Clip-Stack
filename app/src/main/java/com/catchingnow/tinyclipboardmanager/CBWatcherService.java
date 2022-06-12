@@ -18,13 +18,14 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,11 +61,7 @@ public class CBWatcherService extends Service {
     private int notificationPriority = 0;
     private int isMyActivitiesOnForeground = 0;
     private int pIntentId = 999;
-    private OnPrimaryClipChangedListener listener = new OnPrimaryClipChangedListener() {
-        public void onPrimaryClipChanged() {
-            performClipboardCheck();
-        }
-    };
+    private final OnPrimaryClipChangedListener listener = this::performClipboardCheck;
 
     @Override
     public void onCreate() {
@@ -118,16 +115,11 @@ public class CBWatcherService extends Service {
                     getString(R.string.toast_service_temporary_stop)
                     :
                     getString(R.string.toast_service_temporary_resume);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(
-                            mContext,
-                            toastText,
-                            Toast.LENGTH_SHORT
-                            ).show();
-                }
-            });
+            mHandler.post(() -> Toast.makeText(
+                    mContext,
+                    toastText,
+                    Toast.LENGTH_SHORT
+                    ).show());
         }
 
         if (intent.getBooleanExtra(INTENT_EXTRA_CHANGE_STAR_STATUES, false)) {
@@ -243,7 +235,7 @@ public class CBWatcherService extends Service {
         ));
         length += 1;
 
-        length = (length > (NUMBER_OF_CLIPS + 1)) ? (NUMBER_OF_CLIPS + 1) : length;
+        length = Math.min(length, (NUMBER_OF_CLIPS + 1));
 
         Intent openMainDialogIntent = new Intent(this, ClipObjectActionBridge.class)
                 .putExtra(ClipObjectActionBridge.ACTION_CODE, ClipObjectActionBridge.ACTION_OPEN_MAIN_DIALOG);
@@ -255,7 +247,7 @@ public class CBWatcherService extends Service {
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
 
-        NotificationCompat.Builder preBuildNotification = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder preBuildNotification = new NotificationCompat.Builder(this,getString(R.string.app_name))
                 .setContentTitle(getString(R.string.clip_notification_title, MyUtil.stringLengthCut(thisClips.get(0).getText()))) //title
                 .setSmallIcon(R.drawable.ic_stat_icon_colorful)
                 .setVisibility(NotificationCompat.VISIBILITY_SECRET)
@@ -353,7 +345,7 @@ public class CBWatcherService extends Service {
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
 
-        NotificationCompat.Builder preBuildN = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder preBuildN = new NotificationCompat.Builder(this,getString(R.string.app_name))
                 .setContentIntent(pOpenMainDialogIntent)
                 .setContentTitle(getString(R.string.clip_notification_title, currentClip))
                 .setOngoing(pinOnTop)
@@ -419,9 +411,9 @@ public class CBWatcherService extends Service {
     private class NotificationClipListAdapter {
 
         private int buttonNumber = 9999;
-        private RemoteViews expandedView;
-        private List<ClipObject> clips;
-        private Context context;
+        private final RemoteViews expandedView;
+        private final List<ClipObject> clips;
+        private final Context context;
 
         public NotificationClipListAdapter(Context context, ClipObject clipObject) {
             this.context = context;

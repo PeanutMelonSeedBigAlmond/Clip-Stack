@@ -5,13 +5,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
-import android.widget.Switch;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -21,8 +20,8 @@ import java.util.List;
 public class ActivityBackupNew extends MyActionBarActivity {
     private boolean isReverseSort = false;
     private boolean allItems = true;
-    private Calendar dateFrom = Calendar.getInstance();
-    private Calendar dateTo = Calendar.getInstance();
+    private final Calendar dateFrom = Calendar.getInstance();
+    private final Calendar dateTo = Calendar.getInstance();
     private DatePicker datePickerFrom;
     private DatePicker datePickerTo;
 
@@ -46,7 +45,7 @@ public class ActivityBackupNew extends MyActionBarActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+//        int id = item.getItemId();
         initExportView();
 
         //noinspection SimplifiableIfStatement
@@ -78,34 +77,21 @@ public class ActivityBackupNew extends MyActionBarActivity {
         dateTo.set(Calendar.SECOND, dateTo.getMaximum(Calendar.SECOND));
         dateTo.set(Calendar.MILLISECOND, dateTo.getMaximum(Calendar.MILLISECOND));
 
-        Button buttonExport = (Button) findViewById(R.id.export_button);
-        Switch switchReverseSort = (Switch) findViewById(R.id.switch_reverse_sort);
-        final Switch switchOnlyStarredItems = (Switch) findViewById(R.id.switch_only_starred_items);
-        datePickerFrom = (DatePicker) findViewById(R.id.date_picker_from);
-        datePickerTo = (DatePicker) findViewById(R.id.date_picker_to);
-        buttonExport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                export();
-            }
-        });
-        switchReverseSort.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                isReverseSort = isChecked;
-            }
-        });
-        switchOnlyStarredItems.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                allItems = isChecked;
-                switchOnlyStarredItems.setText(
-                        allItems ?
-                                getString(R.string.switch_all_items)
-                                :
-                                getString(R.string.switch_only_starred_items)
-                );
-            }
+        Button buttonExport = findViewById(R.id.export_button);
+        SwitchCompat switchReverseSort = findViewById(R.id.switch_reverse_sort);
+        final SwitchCompat switchOnlyStarredItems =  findViewById(R.id.switch_only_starred_items);
+        datePickerFrom = findViewById(R.id.date_picker_from);
+        datePickerTo = findViewById(R.id.date_picker_to);
+        buttonExport.setOnClickListener(v -> export());
+        switchReverseSort.setOnCheckedChangeListener((buttonView, isChecked) -> isReverseSort = isChecked);
+        switchOnlyStarredItems.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            allItems = isChecked;
+            switchOnlyStarredItems.setText(
+                    allItems ?
+                            getString(R.string.switch_all_items)
+                            :
+                            getString(R.string.switch_only_starred_items)
+            );
         });
         datePickerFrom.init(dateFrom.get(Calendar.YEAR), dateFrom.get(Calendar.MONTH), dateFrom.get(Calendar.DAY_OF_MONTH), null);
         datePickerTo.init(dateTo.get(Calendar.YEAR), dateTo.get(Calendar.MONTH), dateTo.get(Calendar.DAY_OF_MONTH), null);
@@ -125,10 +111,10 @@ public class ActivityBackupNew extends MyActionBarActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                 && getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT) {
-            HorizontalScrollView datePickersScrollView = (HorizontalScrollView) findViewById(R.id.date_pickers_scroll_view);
+            HorizontalScrollView datePickersScrollView = findViewById(R.id.date_pickers_scroll_view);
             datePickersScrollView.smoothScrollTo(0, 0);
         } else {
-            ScrollView datePickersScrollView = (ScrollView) findViewById(R.id.date_pickers_scroll_view);
+            ScrollView datePickersScrollView = findViewById(R.id.date_pickers_scroll_view);
             datePickersScrollView.smoothScrollTo(0, 0);
         }
 

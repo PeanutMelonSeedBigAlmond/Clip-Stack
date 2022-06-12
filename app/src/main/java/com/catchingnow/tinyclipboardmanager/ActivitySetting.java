@@ -10,13 +10,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityEvent;
 import android.widget.LinearLayout;
+
+import androidx.appcompat.widget.Toolbar;
 
 public class ActivitySetting extends MyPreferenceActivity {
 
@@ -30,50 +30,47 @@ public class ActivitySetting extends MyPreferenceActivity {
     public static final String PREF_FLOATING_BUTTON_ALWAYS_SHOW = "pref_floating_button_always_show";
     //    public final static String PREF_LAST_ACTIVE_THIS = "pref_last_active_this";
     private Toolbar mActionBar;
-    private SharedPreferences.OnSharedPreferenceChangeListener myPrefChangeListener;
+    private final SharedPreferences.OnSharedPreferenceChangeListener myPrefChangeListener;
     private SharedPreferences preferences;
     private Context context;
 
     public ActivitySetting() {
-        myPrefChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-                                                  String key) {
-                switch (key) {
-                    case PREF_NOTIFICATION_SHOW:
-                    case PREF_NOTIFICATION_PRIORITY:
-                    case PREF_NOTIFICATION_PIN:
-                        CBWatcherService.startCBService(context, true);
+        myPrefChangeListener = (sharedPreferences, key) -> {
+            switch (key) {
+                case PREF_NOTIFICATION_SHOW:
+                case PREF_NOTIFICATION_PRIORITY:
+                case PREF_NOTIFICATION_PIN:
+                    CBWatcherService.startCBService(context, true);
+                    break;
+                case PREF_START_SERVICE:
+                    CBWatcherService.startCBService(context, true);
+                    if (!sharedPreferences.getBoolean(PREF_START_SERVICE, true)) {
+                        context.stopService(new Intent(context, FloatingWindowService.class));
                         break;
-                    case PREF_START_SERVICE:
-                        CBWatcherService.startCBService(context, true);
-                        if (!sharedPreferences.getBoolean(PREF_START_SERVICE, true)) {
-                            context.stopService(new Intent(context, FloatingWindowService.class));
-                            break;
-                        }
-                    case PREF_FLOATING_BUTTON:
-                    case PREF_FLOATING_BUTTON_ALWAYS_SHOW:
-                        if (sharedPreferences.getBoolean(PREF_FLOATING_BUTTON, false)) {
-                            if (sharedPreferences.getString(PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always").equals("always")) {
-                                context.startService(new Intent(context, FloatingWindowService.class));
-                            } else {
-                                checkAccessibilityPermission();
-                                context.stopService(new Intent(context, FloatingWindowService.class));
-                            }
+                    }
+                case PREF_FLOATING_BUTTON:
+                case PREF_FLOATING_BUTTON_ALWAYS_SHOW:
+                    if (sharedPreferences.getBoolean(PREF_FLOATING_BUTTON, false)) {
+                        if (sharedPreferences.getString(PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always").equals("always")) {
+                            context.startService(new Intent(context, FloatingWindowService.class));
                         } else {
+                            checkAccessibilityPermission();
                             context.stopService(new Intent(context, FloatingWindowService.class));
                         }
-                        break;
-                    case PREF_SAVE_DATES:
-                        int i = Integer.parseInt(sharedPreferences.getString(key, "7"));
-                        if (i > 9998) {
-                            findPreference(key).setSummary(getString(R.string.pref_storage_summary_infinite));
-                        } else {
-                            findPreference(key).setSummary(String.format(getString(R.string.pref_storage_summary_days), i));
-                        }
-                        break;
-                    case PREF_LONG_CLICK_BEHAVIOR:
-                        break;
-                }
+                    } else {
+                        context.stopService(new Intent(context, FloatingWindowService.class));
+                    }
+                    break;
+                case PREF_SAVE_DATES:
+                    int i = Integer.parseInt(sharedPreferences.getString(key, "7"));
+                    if (i > 9998) {
+                        findPreference(key).setSummary(getString(R.string.pref_storage_summary_infinite));
+                    } else {
+                        findPreference(key).setSummary(String.format(getString(R.string.pref_storage_summary_days), i));
+                    }
+                    break;
+                case PREF_LONG_CLICK_BEHAVIOR:
+                    break;
             }
         };
     }
@@ -92,23 +89,15 @@ public class ActivitySetting extends MyPreferenceActivity {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.accessibility_dialog_title))
                 .setMessage(getString(R.string.accessibility_dialog_summary))
-                .setPositiveButton(getString(R.string.accessibility_dialog_ok), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                                startActivityForResult(intent, 0);
-                            }
-                        }
+                .setPositiveButton(getString(R.string.accessibility_dialog_ok), (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                    startActivityForResult(intent, 0);
+                }
                 )
-                .setNegativeButton(getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                PreferenceManager.getDefaultSharedPreferences(context)
-                                        .edit()
-                                        .putString(PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always")
-                                        .apply();
-                            }
-                        }
+                .setNegativeButton(getString(R.string.dialog_cancel), (dialog, which) -> PreferenceManager.getDefaultSharedPreferences(context)
+                        .edit()
+                        .putString(PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always")
+                        .apply()
                 )
                 .setCancelable(false)
                 .create()
@@ -161,15 +150,10 @@ public class ActivitySetting extends MyPreferenceActivity {
         ViewGroup contentView = (ViewGroup) LayoutInflater.from(this).inflate(
                 R.layout.activity_setting, new LinearLayout(this), false);
 
-        mActionBar = (Toolbar) contentView.findViewById(R.id.my_toolbar);
-        mActionBar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mActionBar = contentView.findViewById(R.id.my_toolbar);
+        mActionBar.setNavigationOnClickListener(v -> finish());
 
-        ViewGroup contentWrapper = (ViewGroup) contentView.findViewById(R.id.content_wrapper);
+        ViewGroup contentWrapper = contentView.findViewById(R.id.content_wrapper);
         LayoutInflater.from(this).inflate(layoutResID, contentWrapper, true);
 
         getWindow().setContentView(contentView);

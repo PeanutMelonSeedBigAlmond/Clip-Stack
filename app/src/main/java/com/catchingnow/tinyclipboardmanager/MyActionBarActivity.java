@@ -4,14 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.internal.widget.TintImageView;
-import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -19,13 +14,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
+import android.widget.ImageView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 
 /**
  * Created by heruoxin on 15/2/28.
  */
-public class MyActionBarActivity extends ActionBarActivity {
+public class MyActionBarActivity extends AppCompatActivity {
     public static final String ACTIVITY_OPENED = "activity_opened";
     public static final String ACTIVITY_CLOSED = "activity_closed";
 
@@ -54,7 +54,7 @@ public class MyActionBarActivity extends ActionBarActivity {
     //http://stackoverflow.com/questions/25216749/softkeyboard-open-and-close-listener-in-an-activity-in-android
     private boolean isKeyboardShow = false;
 
-    private ViewTreeObserver.OnGlobalLayoutListener keyboardLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+    private final ViewTreeObserver.OnGlobalLayoutListener keyboardLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         @Override
         public void onGlobalLayout() {
             int heightDiff = rootLayout.getRootView().getHeight() - rootLayout.getHeight();
@@ -89,7 +89,7 @@ public class MyActionBarActivity extends ActionBarActivity {
             return;
         }
 
-        rootLayout = (ViewGroup) findViewById(android.R.id.content);
+        rootLayout = findViewById(android.R.id.content);
         rootLayout.getViewTreeObserver().addOnGlobalLayoutListener(keyboardLayoutListener);
 
         keyboardListenersAttached = true;
@@ -117,7 +117,7 @@ public class MyActionBarActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         preference = PreferenceManager.getDefaultSharedPreferences(this);
-        Toolbar mToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar mToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(mToolbar);
 
         //set toolbar shadow for phone.
@@ -150,7 +150,7 @@ public class MyActionBarActivity extends ActionBarActivity {
         CBWatcherService.startCBService(this, -1);
         if (preference.getBoolean(ActivitySetting.PREF_FLOATING_BUTTON, false) &&
                 preference.getString(ActivitySetting.PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always").equals("always")
-                ) {
+        ) {
             this.startService(new Intent(this, FloatingWindowService.class));
         }
     }
@@ -162,7 +162,7 @@ public class MyActionBarActivity extends ActionBarActivity {
         CBWatcherService.startCBService(this, true, true, 1);
         if (preference.getBoolean(ActivitySetting.PREF_FLOATING_BUTTON, false) &&
                 preference.getString(ActivitySetting.PREF_FLOATING_BUTTON_ALWAYS_SHOW, "always").equals("always")
-                ) {
+        ) {
             this.stopService(new Intent(this, FloatingWindowService.class));
         }
     }
@@ -207,7 +207,8 @@ public class MyActionBarActivity extends ActionBarActivity {
                 if (outViews.isEmpty()) {
                     return;
                 }
-                TintImageView overflow=(TintImageView) outViews.get(0);
+//                TintImageView overflow=(TintImageView) outViews.get(0);
+                ImageView overflow = (ImageView) outViews.get(0);
                 //overflow.setColorFilter(Color.CYAN);
                 overflow.setImageResource(imageID);
                 removeOnGlobalLayoutListener(decorView, this);
@@ -218,8 +219,7 @@ public class MyActionBarActivity extends ActionBarActivity {
     public static void removeOnGlobalLayoutListener(View v, ViewTreeObserver.OnGlobalLayoutListener listener) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
             v.getViewTreeObserver().removeGlobalOnLayoutListener(listener);
-        }
-        else {
+        } else {
             v.getViewTreeObserver().removeOnGlobalLayoutListener(listener);
         }
     }

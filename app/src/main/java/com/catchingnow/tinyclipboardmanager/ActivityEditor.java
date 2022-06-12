@@ -8,7 +8,6 @@ import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +15,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.widget.Toolbar;
 
 
 public class ActivityEditor extends MyActionBarActivity {
@@ -25,7 +27,6 @@ public class ActivityEditor extends MyActionBarActivity {
     private boolean isStarred;
     private MenuItem starItem;
     private ImageButton mFAB;
-    private Toolbar mToolbar;
     private InputMethodManager inputMethodManager;
     private Storage db;
 
@@ -40,17 +41,14 @@ public class ActivityEditor extends MyActionBarActivity {
             oldText = "";
         }
 
-        editText = (EditText) findViewById(R.id.edit_text);
-        mFAB = (ImageButton) findViewById(R.id.main_fab);
-        mToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        editText = findViewById(R.id.edit_text);
+        mFAB =  findViewById(R.id.main_fab);
+        Toolbar mToolbar = findViewById(R.id.my_toolbar);
         editText.setText(oldText);
-        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                }
+        editText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
             }
         });
 
@@ -65,7 +63,10 @@ public class ActivityEditor extends MyActionBarActivity {
             titleText = getString(R.string.title_activity_editor);
         }
         mToolbar.setLogo(R.drawable.ic_action_edit);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        ActionBar actionBar=getSupportActionBar();
+        if (actionBar!=null){
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
         getSupportActionBar().setTitle(titleText);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setTaskDescription(new ActivityManager.TaskDescription(
@@ -141,19 +142,16 @@ public class ActivityEditor extends MyActionBarActivity {
         }
         mFAB.animate().scaleX(0).setDuration(160);
         mFAB.animate().scaleY(0);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (isStarred) {
-                    mFAB.setImageResource(R.drawable.ic_action_star_white);
-                    mFabBackground.startTransition((int) mFAB.animate().getDuration());
-                } else {
-                    mFAB.setImageResource(R.drawable.ic_action_copy);
-                    mFabBackground.resetTransition();
-                }
-                mFAB.animate().scaleX(1);
-                mFAB.animate().scaleY(1);
+        new Handler().postDelayed(() -> {
+            if (isStarred) {
+                mFAB.setImageResource(R.drawable.ic_action_star_white);
+                mFabBackground.startTransition((int) mFAB.animate().getDuration());
+            } else {
+                mFAB.setImageResource(R.drawable.ic_action_copy);
+                mFabBackground.resetTransition();
             }
+            mFAB.animate().scaleX(1);
+            mFAB.animate().scaleY(1);
         }, 220);
     }
 
@@ -174,7 +172,7 @@ public class ActivityEditor extends MyActionBarActivity {
         String newText = editText.getText().toString();
         String toastMessage;
         db.modifyClip(oldText, newText, (isStarred ? 1 : -1));
-        if (newText != null && !newText.isEmpty()) {
+        if (!newText.isEmpty()) {
             toastMessage = getString(R.string.toast_copied, newText + "\n");
         } else {
             toastMessage = getString(R.string.toast_deleted);

@@ -2,10 +2,7 @@ package com.catchingnow.tinyclipboardmanager;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageButton;
@@ -32,14 +29,9 @@ public class ActivityMainDialog extends ActivityMain {
 
         findViewById(R.id.main_fab).setVisibility(View.GONE);
         mToolbar.setNavigationIcon(R.drawable.ic_stat_icon);
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(context, ActivityMain.class)
-                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                );
-            }
-        });
+        mToolbar.setNavigationOnClickListener(v -> startActivity(new Intent(context, ActivityMain.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        ));
     }
 
     @Override
@@ -84,27 +76,21 @@ public class ActivityMainDialog extends ActivityMain {
     @Override
     protected void addClickStringAction(final Context context, final ClipObject clipObject, final int actionCode, View button) {
         if (button instanceof TextView) {
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
-                            .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
-                            .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
-                            .putExtra(ClipObjectActionBridge.ACTION_CODE, ClipObjectActionBridge.ACTION_EDIT);
-                    context.startService(openIntent);
-                }
+            button.setOnClickListener(v -> {
+                Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
+                        .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
+                        .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
+                        .putExtra(ClipObjectActionBridge.ACTION_CODE, ClipObjectActionBridge.ACTION_EDIT);
+                context.startService(openIntent);
             });
         } else {
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
-                            .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
-                            .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
-                            .putExtra(ClipObjectActionBridge.ACTION_CODE, ClipObjectActionBridge.ACTION_COPY);
-                    context.startService(openIntent);
-                    moveTaskToBack(true);
-                }
+            button.setOnClickListener(v -> {
+                Intent openIntent = new Intent(context, ClipObjectActionBridge.class)
+                        .putExtra(Intent.EXTRA_TEXT, clipObject.getText())
+                        .putExtra(ClipObjectActionBridge.STATUE_IS_STARRED, clipObject.isStarred())
+                        .putExtra(ClipObjectActionBridge.ACTION_CODE, ClipObjectActionBridge.ACTION_COPY);
+                context.startService(openIntent);
+                moveTaskToBack(true);
             });
         }
     }
